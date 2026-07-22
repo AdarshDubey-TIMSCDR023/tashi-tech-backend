@@ -7,15 +7,20 @@ exports.connectDB = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const connectDB = async () => {
     try {
-        const connStr = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/tashitech';
-        console.log(`Connecting to MongoDB...`);
-        await mongoose_1.default.connect(connStr);
-        console.log(`MongoDB Connected successfully!`);
+        const mongoURI = process.env.MONGODB_URI;
+        if (!mongoURI) {
+            throw new Error("MONGODB_URI is not defined in the environment variables.");
+        }
+        console.log("Connecting to MongoDB...");
+        await mongoose_1.default.connect(mongoURI);
+        console.log("MongoDB connected successfully.");
+        console.log(`Database: ${mongoose_1.default.connection.name}`);
+        console.log(`Host: ${mongoose_1.default.connection.host}`);
     }
     catch (error) {
-        console.error(`MongoDB connection error:`, error);
-        // Do not crash the process in development to allow mock fallbacks
-        if (process.env.NODE_ENV === 'production') {
+        console.error("MongoDB connection failed.");
+        console.error(error);
+        if (process.env.NODE_ENV === "production") {
             process.exit(1);
         }
     }
