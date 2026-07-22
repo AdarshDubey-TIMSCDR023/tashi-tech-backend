@@ -42,9 +42,6 @@ const contactLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Connect to Database
-connectDB();
-
 // Input Validation Schemas with Zod
 const ContactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
@@ -141,11 +138,30 @@ const seedDatabase = async () => {
     }
   } catch (err) {
     console.error('Error seeding database:', err);
+    throw err; // Re-throw to handle in the calling function
   }
 };
 
-// Seed immediately
-seedDatabase();
+// Initialize database connection and start server
+const initializeApp = async () => {
+  try {
+    // Connect to database first
+    await connectDB();
+    console.log('✅ Database connected successfully');
+
+    // Seed database after connection is established
+    await seedDatabase();
+    console.log('✅ Database seeded successfully');
+
+    // Start the server after everything is ready
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to initialize application:', error);
+    process.exit(1); // Exit with failure code
+  }
+};
 
 // API Routes
 app.get('/api/health', (req: Request, res: Response) => {
@@ -158,6 +174,7 @@ app.get('/api/blogs', apiLimiter, async (req: Request, res: Response) => {
     const blogs = await Blog.find().sort({ createdAt: -1 });
     res.json(blogs);
   } catch (error) {
+    console.error('Error fetching blogs:', error);
     res.status(500).json({ error: 'Failed to fetch blog posts.' });
   }
 });
@@ -168,6 +185,7 @@ app.get('/api/faqs', apiLimiter, async (req: Request, res: Response) => {
     const faqs = await FAQ.find().sort({ order: 1 });
     res.json(faqs);
   } catch (error) {
+    console.error('Error fetching FAQs:', error);
     res.status(500).json({ error: 'Failed to fetch FAQs.' });
   }
 });
@@ -179,7 +197,6 @@ app.post('/api/contact', contactLimiter, async (req: Request, res: Response) => 
     const newContact = new Contact(parsedData);
     await newContact.save();
     
-    // Log to console/alerts
     console.log(`[Contact Submission] from ${parsedData.name} (${parsedData.email}): ${parsedData.message}`);
     
     res.status(201).json({ success: true, message: 'Message submitted successfully. Our team will get back to you shortly!' });
@@ -187,6 +204,7 @@ app.post('/api/contact', contactLimiter, async (req: Request, res: Response) => 
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.errors[0].message });
     } else {
+      console.error('Error processing contact submission:', error);
       res.status(500).json({ error: 'Failed to process contact submission.' });
     }
   }
@@ -197,7 +215,6 @@ app.post('/api/newsletter', contactLimiter, async (req: Request, res: Response) 
   try {
     const parsedData = NewsletterSchema.parse(req.body);
     
-    // Check if already subscribed
     const existing = await Newsletter.findOne({ email: parsedData.email });
     if (existing) {
       res.status(200).json({ success: true, message: 'You are already subscribed to our newsletter!' });
@@ -212,6 +229,7 @@ app.post('/api/newsletter', contactLimiter, async (req: Request, res: Response) 
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.errors[0].message });
     } else {
+      console.error('Error processing newsletter subscription:', error);
       res.status(500).json({ error: 'Failed to register newsletter subscription.' });
     }
   }
@@ -223,6 +241,5 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ error: 'Internal Server Error.' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start the application
+initializeApp();
