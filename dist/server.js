@@ -14,9 +14,12 @@ const Contact_1 = require("./models/Contact");
 const Newsletter_1 = require("./models/Newsletter");
 const Blog_1 = require("./models/Blog");
 const FAQ_1 = require("./models/FAQ");
+
 dotenv_1.default.config();
+
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
+
 // Security and Middleware
 app.use((0, helmet_1.default)());
 app.use((0, cors_1.default)({
@@ -25,6 +28,7 @@ app.use((0, cors_1.default)({
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express_1.default.json());
+
 // Rate Limiter for general endpoints
 const apiLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -33,6 +37,7 @@ const apiLimiter = (0, express_rate_limit_1.default)({
     standardHeaders: true,
     legacyHeaders: false,
 });
+
 // Stricter rate limiter for contact form & newsletter signup
 const contactLimiter = (0, express_rate_limit_1.default)({
     windowMs: 60 * 60 * 1000, // 1 hour
@@ -41,8 +46,7 @@ const contactLimiter = (0, express_rate_limit_1.default)({
     standardHeaders: true,
     legacyHeaders: false,
 });
-// Connect to Database
-(0, db_1.connectDB)();
+
 // Input Validation Schemas with Zod
 const ContactSchema = zod_1.z.object({
     name: zod_1.z.string().min(2, 'Name must be at least 2 characters').max(100),
@@ -51,9 +55,11 @@ const ContactSchema = zod_1.z.object({
     subject: zod_1.z.string().min(3, 'Subject must be at least 3 characters').max(200).optional(),
     message: zod_1.z.string().min(10, 'Message must be at least 10 characters').max(2000),
 });
+
 const NewsletterSchema = zod_1.z.object({
     email: zod_1.z.string().email('Invalid email address'),
 });
+
 // Seed data function to ensure dynamic mock content is present
 const seedDatabase = async () => {
     try {
@@ -103,6 +109,7 @@ const seedDatabase = async () => {
             ]);
             console.log('Blogs seeded.');
         }
+
         const faqCount = await FAQ_1.FAQ.countDocuments();
         if (faqCount === 0) {
             console.log('Seeding FAQs...');
@@ -134,84 +141,131 @@ const seedDatabase = async () => {
             ]);
             console.log('FAQs seeded.');
         }
-    }
-    catch (err) {
+        console.log('✅ Database seeding completed successfully');
+    } catch (err) {
         console.error('Error seeding database:', err);
+        throw err; // Re-throw to be handled by the calling function
     }
 };
-// Seed immediately
-seedDatabase();
-// API Routes
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'OK', timestamp: new Date() });
-});
-// GET Blogs
-app.get('/api/blogs', apiLimiter, async (req, res) => {
+
+// Initialize database connection and start server
+const initializeApp = async () => {
     try {
-        const blogs = await Blog_1.Blog.find().sort({ createdAt: -1 });
-        res.json(blogs);
+        // Connect to database first
+        await (0, db_1.connectDB)();
+        console.log('✅ Database connected successfully');
+
+        // Seed database after connection is established
+        await seedDatabase();
+
+        // Setup API Routes
+        setupRoutes();
+
+        // Start the server after everything is ready
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(`📡 API available at http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('❌ Failed to initialize application:', error);
+        console.error('💡 Please check:');
+        console.error('   1. MongoDB connection string in .env file');
+        console.error('   2. Network whitelist in MongoDB Atlas');
+        console.error('   3. Database credentials');
+        process.exit(1); // Exit with failure code
     }
-    catch (error) {
-        res.status(500).json({ error: 'Failed to fetch blog posts.' });
-    }
-});
-// GET FAQs
-app.get('/api/faqs', apiLimiter, async (req, res) => {
-    try {
-        const faqs = await FAQ_1.FAQ.find().sort({ order: 1 });
-        res.json(faqs);
-    }
-    catch (error) {
-        res.status(500).json({ error: 'Failed to fetch FAQs.' });
-    }
-});
-// POST Contact Form Submission
-app.post('/api/contact', contactLimiter, async (req, res) => {
-    try {
-        const parsedData = ContactSchema.parse(req.body);
-        const newContact = new Contact_1.Contact(parsedData);
-        await newContact.save();
-        // Log to console/alerts
-        console.log(`[Contact Submission] from ${parsedData.name} (${parsedData.email}): ${parsedData.message}`);
-        res.status(201).json({ success: true, message: 'Message submitted successfully. Our team will get back to you shortly!' });
-    }
-    catch (error) {
-        if (error instanceof zod_1.z.ZodError) {
-            res.status(400).json({ error: error.errors[0].message });
+};
+
+// Setup all API routes
+const setupRoutes = () => {
+    // Health Check
+    app.get('/api/health', (req, res) => {
+        res.json({ status: 'OK', timestamp: new Date() });
+    });
+
+    // GET Blogs
+    app.get('/api/blogs', apiLimiter, async (req, res) => {
+        try {
+            const blogs = await Blog_1.Blog.find().sort({ createdAt: -1 });
+            res.json(blogs);
+        } catch (error) {
+            console.error('Error fetching blogs:', error);
+            res.status(500).json({ error: 'Failed to fetch blog posts.' });
         }
-        else {
-            res.status(500).json({ error: 'Failed to process contact submission.' });
+    });
+
+    // GET FAQs
+    app.get('/api/faqs', apiLimiter, async (req, res) => {
+        try {
+            const faqs = await FAQ_1.FAQ.find().sort({ order: 1 });
+            res.json(faqs);
+        } catch (error) {
+            console.error('Error fetching FAQs:', error);
+            res.status(500).json({ error: 'Failed to fetch FAQs.' });
         }
-    }
-});
-// POST Newsletter Signup
-app.post('/api/newsletter', contactLimiter, async (req, res) => {
-    try {
-        const parsedData = NewsletterSchema.parse(req.body);
-        // Check if already subscribed
-        const existing = await Newsletter_1.Newsletter.findOne({ email: parsedData.email });
-        if (existing) {
-            res.status(200).json({ success: true, message: 'You are already subscribed to our newsletter!' });
-            return;
+    });
+
+    // POST Contact Form Submission
+    app.post('/api/contact', contactLimiter, async (req, res) => {
+        try {
+            const parsedData = ContactSchema.parse(req.body);
+            const newContact = new Contact_1.Contact(parsedData);
+            await newContact.save();
+
+            console.log(`[Contact Submission] from ${parsedData.name} (${parsedData.email}): ${parsedData.message}`);
+
+            res.status(201).json({ 
+                success: true, 
+                message: 'Message submitted successfully. Our team will get back to you shortly!' 
+            });
+        } catch (error) {
+            if (error instanceof zod_1.z.ZodError) {
+                res.status(400).json({ error: error.errors[0].message });
+            } else {
+                console.error('Error processing contact submission:', error);
+                res.status(500).json({ error: 'Failed to process contact submission.' });
+            }
         }
-        const newSubscriber = new Newsletter_1.Newsletter(parsedData);
-        await newSubscriber.save();
-        res.status(201).json({ success: true, message: 'Subscribed successfully! Thank you for joining our newsletter.' });
-    }
-    catch (error) {
-        if (error instanceof zod_1.z.ZodError) {
-            res.status(400).json({ error: error.errors[0].message });
+    });
+
+    // POST Newsletter Signup
+    app.post('/api/newsletter', contactLimiter, async (req, res) => {
+        try {
+            const parsedData = NewsletterSchema.parse(req.body);
+
+            // Check if already subscribed
+            const existing = await Newsletter_1.Newsletter.findOne({ email: parsedData.email });
+            if (existing) {
+                res.status(200).json({ 
+                    success: true, 
+                    message: 'You are already subscribed to our newsletter!' 
+                });
+                return;
+            }
+
+            const newSubscriber = new Newsletter_1.Newsletter(parsedData);
+            await newSubscriber.save();
+
+            res.status(201).json({ 
+                success: true, 
+                message: 'Subscribed successfully! Thank you for joining our newsletter.' 
+            });
+        } catch (error) {
+            if (error instanceof zod_1.z.ZodError) {
+                res.status(400).json({ error: error.errors[0].message });
+            } else {
+                console.error('Error processing newsletter subscription:', error);
+                res.status(500).json({ error: 'Failed to register newsletter subscription.' });
+            }
         }
-        else {
-            res.status(500).json({ error: 'Failed to register newsletter subscription.' });
-        }
-    }
-});
-// Global Error Handler
-app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
-    res.status(500).json({ error: 'Internal Server Error.' });
-});
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+    });
+
+    // Global Error Handler
+    app.use((err, req, res, next) => {
+        console.error('Unhandled error:', err);
+        res.status(500).json({ error: 'Internal Server Error.' });
+    });
+};
+
+// Start the application
+initializeApp();
