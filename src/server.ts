@@ -15,35 +15,48 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Enable trust proxy for Render (and other proxy services)
-// This allows express-rate-limit to correctly identify users via X-Forwarded-For
-app.set('trust proxy', true);
+// Trust Render's reverse proxy only
+// This is required for express-rate-limit to work securely.
+app.set('trust proxy', 1);
 
 // Security and Middleware
 app.use(helmet());
 app.use(cors({
   origin: process.env.CLIENT_URL || '*',
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 
 // Rate Limiter for general endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per window
-  message: { error: 'Too many requests, please try again later.' },
-  standardHeaders: true,
+  limit: 100,
+  standardHeaders: 'draft-8',
   legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many requests. Please try again later.',
+  },
+  validate: {
+    trustProxy: false,
+  },
 });
 
 // Stricter rate limiter for contact form & newsletter signup
 const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // Limit each IP to 5 requests per hour
-  message: { error: 'Too many submissions, please try again in an hour.' },
-  standardHeaders: true,
+  limit: 5,
+  standardHeaders: 'draft-8',
   legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many submissions. Please try again in an hour.',
+  },
+  validate: {
+    trustProxy: false,
+  },
 });
 
 // Input Validation Schemas with Zod
