@@ -20,6 +20,9 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
 
+// ✅ Enable trust proxy for Render (and other proxy services)
+app.set('trust proxy', true);
+
 // Security and Middleware
 app.use((0, helmet_1.default)());
 app.use((0, cors_1.default)({
