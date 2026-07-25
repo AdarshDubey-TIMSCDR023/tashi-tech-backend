@@ -15,6 +15,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ✅ Enable trust proxy for Render (and other proxy services)
+// This allows express-rate-limit to correctly identify users via X-Forwarded-For
+app.set('trust proxy', true);
+
 // Security and Middleware
 app.use(helmet());
 app.use(cors({
