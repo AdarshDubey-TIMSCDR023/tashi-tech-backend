@@ -21,41 +21,37 @@ app.set('trust proxy', 1);
 
 // Security and Middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.CLIENT_URL || '*',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 app.use(express.json());
 
 // Rate Limiter for general endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100,
+  max: 100,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: {
     success: false,
     error: 'Too many requests. Please try again later.',
   },
-  validate: {
-    trustProxy: false,
-  },
 });
 
 // Stricter rate limiter for contact form & newsletter signup
 const contactLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  limit: 5,
+  max: 5,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: {
     success: false,
     error: 'Too many submissions. Please try again in an hour.',
-  },
-  validate: {
-    trustProxy: false,
   },
 });
 
@@ -85,42 +81,51 @@ const seedDatabase = async () => {
         {
           title: 'The Future of AI in Modern Enterprise Solutions',
           slug: 'future-of-ai-enterprise-solutions',
-          excerpt: 'Explore how deep learning, custom LLMs, and agentic workflows are reshaping corporate intelligence and automation.',
-          content: 'As artificial intelligence shifts from experimental models to fully integrated solutions, companies are recognizing the power of custom agentic workflows. From automated operat[...]
+          excerpt:
+            'Explore how deep learning, custom LLMs, and agentic workflows are reshaping corporate intelligence and automation.',
+          content:
+            'As artificial intelligence shifts from experimental models to fully integrated solutions, companies are recognizing the power of custom agentic workflows. From automated operations to intelligent assistants, AI is changing enterprise software.',
           category: 'Artificial Intelligence',
           readTime: '5 min read',
           image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop',
           author: {
             name: 'Dr. Tashi Namgyal',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop'
-          }
+            avatar:
+              'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+          },
         },
         {
           title: 'Architecting Serverless Applications with Next.js 15 and AWS',
           slug: 'nextjs-15-aws-serverless-architecture',
-          excerpt: 'A comprehensive guide on building ultra-fast, auto-scaling Next.js applications using AWS Lambda, Edge routes, and modern infrastructure.',
-          content: 'Next.js 15 brings powerful compilation optimizations and Server Actions. Combining Next.js with serverless architectures on AWS provides developers with unmatched scalability, [...]
+          excerpt:
+            'A comprehensive guide on building ultra-fast, auto-scaling Next.js applications using AWS Lambda, Edge routes, and modern infrastructure.',
+          content:
+            'Next.js 15 brings powerful compilation optimizations and Server Actions. Combining Next.js with serverless architectures on AWS provides developers with unmatched scalability and simplified deployment patterns.',
           category: 'Cloud Solutions',
           readTime: '8 min read',
           image: 'https://images.unsplash.com/photo-1600132806370-bf17e65e942f?q=80&w=800&auto=format&fit=crop',
           author: {
             name: 'Karma Dorji',
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop'
-          }
+            avatar:
+              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+          },
         },
         {
           title: 'Optimizing Core Web Vitals: A Case Study in Web Performance',
           slug: 'optimizing-core-web-vitals-case-study',
-          excerpt: 'How we helped an e-commerce platform improve LCP by 64% and achieve a perfect 100/100 Lighthouse performance rating.',
-          content: 'Web performance is directly correlated with business conversions. In this technical case study, we walk through modern page optimization techniques: tree shaking, asset minifi[...]
+          excerpt:
+            'How we helped an e-commerce platform improve LCP by 64% and achieve a perfect 100/100 Lighthouse performance rating.',
+          content:
+            'Web performance is directly correlated with business conversions. In this technical case study, we walk through modern page optimization techniques such as tree shaking, asset minification, and critical CSS.',
           category: 'Web Development',
           readTime: '6 min read',
           image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop',
           author: {
             name: 'Tandin Wangchuk',
-            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop'
-          }
-        }
+            avatar:
+              'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200&auto=format&fit=crop',
+          },
+        },
       ]);
       console.log('Blogs seeded.');
     }
@@ -131,28 +136,32 @@ const seedDatabase = async () => {
       await FAQ.create([
         {
           question: 'What services does Tashi Tech provide?',
-          answer: 'We specialize in Website Development, Web Application Development, Mobile App Development, UI/UX Design, custom AI & Agentic Solutions, Cloud Infrastructure Services, SEO Optim[...]
+          answer:
+            'We specialize in Website Development, Web Application Development, Mobile App Development, UI/UX Design, custom AI & Agentic Solutions, Cloud Infrastructure Services, and SEO.',
           category: 'General',
-          order: 1
+          order: 1,
         },
         {
           question: 'How long does a typical custom software project take?',
-          answer: 'While simple landing pages or SEO audits can be completed within 1-2 weeks, more complex web applications, custom AI workflows, or mobile apps usually span 4 to 12 weeks from s[...]
+          answer:
+            'While simple landing pages or SEO audits can be completed within 1-2 weeks, more complex web applications, custom AI workflows, or mobile apps usually span 4 to 12 weeks from scoping to delivery.',
           category: 'Process',
-          order: 2
+          order: 2,
         },
         {
           question: 'Does Tashi Tech offer post-deployment support?',
-          answer: 'Yes, we provide 24/7 technical support, security patching, cloud monitoring, and performance optimization packages to ensure your systems remain fast and secure long after the [...]
+          answer:
+            'Yes, we provide 24/7 technical support, security patching, cloud monitoring, and performance optimization packages to ensure your systems remain fast and secure.',
           category: 'Support',
-          order: 3
+          order: 3,
         },
         {
           question: 'Is the website optimized for mobile and accessibility?',
-          answer: 'Absolutely. All our development projects are built mobile-first and strictly adhere to WCAG 2.2 AA accessibility guidelines, ensuring 100% keyboard navigation, screen-reader su[...]
+          answer:
+            'Absolutely. All our development projects are built mobile-first and adhere to WCAG 2.2 AA accessibility guidelines to ensure keyboard navigation and screen reader support.',
           category: 'Compliance',
-          order: 4
-        }
+          order: 4,
+        },
       ]);
       console.log('FAQs seeded.');
     }
@@ -216,9 +225,9 @@ app.post('/api/contact', contactLimiter, async (req: Request, res: Response) => 
     const parsedData = ContactSchema.parse(req.body);
     const newContact = new Contact(parsedData);
     await newContact.save();
-    
+
     console.log(`[Contact Submission] from ${parsedData.name} (${parsedData.email}): ${parsedData.message}`);
-    
+
     res.status(201).json({ success: true, message: 'Message submitted successfully. Our team will get back to you shortly!' });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -234,16 +243,16 @@ app.post('/api/contact', contactLimiter, async (req: Request, res: Response) => 
 app.post('/api/newsletter', contactLimiter, async (req: Request, res: Response) => {
   try {
     const parsedData = NewsletterSchema.parse(req.body);
-    
+
     const existing = await Newsletter.findOne({ email: parsedData.email });
     if (existing) {
       res.status(200).json({ success: true, message: 'You are already subscribed to our newsletter!' });
       return;
     }
-    
+
     const newSubscriber = new Newsletter(parsedData);
     await newSubscriber.save();
-    
+
     res.status(201).json({ success: true, message: 'Subscribed successfully! Thank you for joining our newsletter.' });
   } catch (error) {
     if (error instanceof z.ZodError) {
