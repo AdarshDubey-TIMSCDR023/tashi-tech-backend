@@ -62,8 +62,11 @@ const contactLimiter = rateLimit({
 // Input Validation Schemas with Zod
 const ContactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
+  company: z.string().optional(),
   email: z.string().email('Invalid email address'),
   phone: z.string().optional(),
+  service: z.string().optional(),
+  budget: z.string().optional(),
   subject: z.string().min(3, 'Subject must be at least 3 characters').max(200).optional(),
   message: z.string().min(10, 'Message must be at least 10 characters').max(2000),
 });
@@ -83,7 +86,7 @@ const seedDatabase = async () => {
           title: 'The Future of AI in Modern Enterprise Solutions',
           slug: 'future-of-ai-enterprise-solutions',
           excerpt: 'Explore how deep learning, custom LLMs, and agentic workflows are reshaping corporate intelligence and automation.',
-          content: 'As artificial intelligence shifts from experimental models to fully integrated solutions, companies are recognizing the power of custom agentic workflows. From automated operations to smart retrieval systems (RAG), AI is no longer a luxury but a core driver of efficiency...',
+          content: 'As artificial intelligence shifts from experimental models to fully integrated solutions, companies are recognizing the power of custom agentic workflows. From automated operat[...]
           category: 'Artificial Intelligence',
           readTime: '5 min read',
           image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop',
@@ -96,7 +99,7 @@ const seedDatabase = async () => {
           title: 'Architecting Serverless Applications with Next.js 15 and AWS',
           slug: 'nextjs-15-aws-serverless-architecture',
           excerpt: 'A comprehensive guide on building ultra-fast, auto-scaling Next.js applications using AWS Lambda, Edge routes, and modern infrastructure.',
-          content: 'Next.js 15 brings powerful compilation optimizations and Server Actions. Combining Next.js with serverless architectures on AWS provides developers with unmatched scalability, global delivery, and near-zero server maintenance overhead...',
+          content: 'Next.js 15 brings powerful compilation optimizations and Server Actions. Combining Next.js with serverless architectures on AWS provides developers with unmatched scalability, [...]
           category: 'Cloud Solutions',
           readTime: '8 min read',
           image: 'https://images.unsplash.com/photo-1600132806370-bf17e65e942f?q=80&w=800&auto=format&fit=crop',
@@ -109,7 +112,7 @@ const seedDatabase = async () => {
           title: 'Optimizing Core Web Vitals: A Case Study in Web Performance',
           slug: 'optimizing-core-web-vitals-case-study',
           excerpt: 'How we helped an e-commerce platform improve LCP by 64% and achieve a perfect 100/100 Lighthouse performance rating.',
-          content: 'Web performance is directly correlated with business conversions. In this technical case study, we walk through modern page optimization techniques: tree shaking, asset minification, lazy loading, and critical CSS rendering to satisfy WCAG 2.2 and Lighthouse parameters...',
+          content: 'Web performance is directly correlated with business conversions. In this technical case study, we walk through modern page optimization techniques: tree shaking, asset minifi[...]
           category: 'Web Development',
           readTime: '6 min read',
           image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop',
@@ -128,25 +131,25 @@ const seedDatabase = async () => {
       await FAQ.create([
         {
           question: 'What services does Tashi Tech provide?',
-          answer: 'We specialize in Website Development, Web Application Development, Mobile App Development, UI/UX Design, custom AI & Agentic Solutions, Cloud Infrastructure Services, SEO Optimization, and Digital Marketing.',
+          answer: 'We specialize in Website Development, Web Application Development, Mobile App Development, UI/UX Design, custom AI & Agentic Solutions, Cloud Infrastructure Services, SEO Optim[...]
           category: 'General',
           order: 1
         },
         {
           question: 'How long does a typical custom software project take?',
-          answer: 'While simple landing pages or SEO audits can be completed within 1-2 weeks, more complex web applications, custom AI workflows, or mobile apps usually span 4 to 12 weeks from scoping to final production deployment.',
+          answer: 'While simple landing pages or SEO audits can be completed within 1-2 weeks, more complex web applications, custom AI workflows, or mobile apps usually span 4 to 12 weeks from s[...]
           category: 'Process',
           order: 2
         },
         {
           question: 'Does Tashi Tech offer post-deployment support?',
-          answer: 'Yes, we provide 24/7 technical support, security patching, cloud monitoring, and performance optimization packages to ensure your systems remain fast and secure long after the initial launch.',
+          answer: 'Yes, we provide 24/7 technical support, security patching, cloud monitoring, and performance optimization packages to ensure your systems remain fast and secure long after the [...]
           category: 'Support',
           order: 3
         },
         {
           question: 'Is the website optimized for mobile and accessibility?',
-          answer: 'Absolutely. All our development projects are built mobile-first and strictly adhere to WCAG 2.2 AA accessibility guidelines, ensuring 100% keyboard navigation, screen-reader support, and proper contrast ratios.',
+          answer: 'Absolutely. All our development projects are built mobile-first and strictly adhere to WCAG 2.2 AA accessibility guidelines, ensuring 100% keyboard navigation, screen-reader su[...]
           category: 'Compliance',
           order: 4
         }
